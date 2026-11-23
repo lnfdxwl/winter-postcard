@@ -7,7 +7,7 @@ window.cardURL=name=>{
  return assets.get(name);
 };
 async function bundle(id,progress){
- const response=await fetch(id+'.bin',{referrerPolicy:'no-referrer'});
+ const response=await fetch(id+'.bin?v=2',{referrerPolicy:'no-referrer'});
  if(!response.ok)throw new Error('Download failed');
  const total=Number(response.headers.get('content-length'));
  let data;
