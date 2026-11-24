@@ -15,7 +15,7 @@ window.cardURL=name=>{
  return assets.get(name);
 };
 async function bundle(id,progress){
- const response=await fetch(id+'.bin?v='+(id==='cover'?'8':'2'),{referrerPolicy:'no-referrer'});
+ const response=await fetch(id+'.bin?v='+(id==='cover'?'9':'3'),{referrerPolicy:'no-referrer'});
  if(!response.ok)throw new Error('Download failed');
  const total=Number(response.headers.get('content-length'));
  let data;
@@ -30,7 +30,7 @@ async function bundle(id,progress){
  for(const [name,size,type] of files){
   const content=new Uint8Array(plain,offset,size);
   if(type==='text/plain')textFiles.set(name,decoder.decode(content));
-  else assets.set(name,URL.createObjectURL(new Blob([content],{type})));
+  else if(!assets.has(name))assets.set(name,URL.createObjectURL(new Blob([content],{type})));
   offset+=size;
  }
 }
