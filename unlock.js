@@ -15,7 +15,7 @@ window.cardURL=name=>{
  return assets.get(name);
 };
 async function bundle(id,progress){
- const response=await fetch(id+'.bin?v='+(id==='cover'?'10':'3'),{referrerPolicy:'no-referrer'});
+ const response=await fetch(id+'.bin?v='+(id==='cover'?'11':'3'),{referrerPolicy:'no-referrer'});
  if(!response.ok)throw new Error('Download failed');
  const total=Number(response.headers.get('content-length'));
  let data;
@@ -34,13 +34,23 @@ async function bundle(id,progress){
   offset+=size;
  }
 }
+let tailRequest,tailReady=false;
+window.hasTail=()=>tailReady;
+window.loadTail=()=>{
+ if(!tailRequest)tailRequest=bundle('remaining').then(()=>{tailReady=true}).catch(err=>{tailRequest=null;throw err});
+ return tailRequest;
+};
 window.isReady=i=>ready.has(i);
 window.prepareRound=(i,progress)=>{
  if(!pending.has(i)){
   const first=Boolean(frame?.hidden);
   if(first)stageLabel('正在装入照片和音乐…');
-  pending.set(i,bundle('reel'+i,n=>{progress?.(n);if(first)progressValue(n)}).then(()=>{
+  const id=i===1?'opening':'reel'+i;
+   // Give the playing song's photos priority over preloading the next song.
+   const before=i!==1&&ready.has(1)?window.loadTail().catch(()=>{}):Promise.resolve();
+   pending.set(i,before.then(()=>bundle(id,n=>{progress?.(n);if(first)progressValue(n)})).then(()=>{
    ready.add(i);
+   if(i===1)window.loadTail().catch(()=>{});
    if(first){frame.hidden=false;document.querySelector('main').hidden=true}
   }).catch(err=>{
    pending.delete(i);if(first)stopLoader('相册加载中断，请刷新重试。');throw err
